@@ -213,7 +213,7 @@ This method is combined client:send_req and client:receive
 
 
 Licence
-=======
+---
 
 Started life as a fork of
 [lua-resty-http](https://github.com/bsm/lua-resty-http) - Copyright (c) 2013 Black Square Media Ltd
