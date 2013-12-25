@@ -21,7 +21,7 @@ Table of Contents
     * [receive](#receive)
     * [request](#request)
 
-* [License](#Licence)
+* [License](#License)
 
 
 Status
@@ -212,8 +212,8 @@ The opts arg is the same of the arg of client:send_req(opts)
 This method is combined client:send_req and client:receive
 
 
-Licence
----
+License
+=======
 
 Started life as a fork of
 [lua-resty-http](https://github.com/bsm/lua-resty-http) - Copyright (c) 2013 Black Square Media Ltd
