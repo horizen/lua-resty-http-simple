@@ -21,7 +21,7 @@ Table of Contents
     * [receive](#receive)
     * [request](#request)
 
-* [Copyright and License](#Licence)
+* [License](#Licence)
 
 
 Status
