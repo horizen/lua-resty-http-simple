@@ -26,23 +26,25 @@ __DATA__
     resolver $TEST_NGINX_RESOLVER;
     location /foo {
         content_by_lua '
-	   ngx.header["foo-bar"] = "Foo-Bar"
-	   ngx.header["foo-baz"] = "Foo-Baz"
-	   ngx.header["etag"] = "ETag"
-	   ngx.header["X-FOO-BAR"] = "X-Foo-Bar"
-	   ngx.say("meh")
+	        ngx.header["foo-bar"] = "Foo-Bar"
+	        ngx.header["foo-baz"] = "Foo-Baz"
+	        ngx.header["etag"] = "ETag"
+	        ngx.header["X-FOO-BAR"] = "X-Foo-Bar"
+	        ngx.say("meh")
         ';
     }
 
     location /t {
         content_by_lua '
-	    local http = require "resty.http.simple"
-	    local res, err = http.request("127.0.0.1", 1984, { path = "/foo" })
-	    headers = res.headers
-	    ngx.say(headers["Foo-Bar"])
-	    ngx.say(headers["Foo-Baz"])
-	    ngx.say(headers["ETag"])
-	    ngx.say(headers["X-Foo-Bar"])
+            local http = require "resty.http.simple"
+            local client = http:new()
+            local ok, err = client:connect("127.0.0.1", 1984)
+            local res, err = client:request({ path = "/foo" })
+            headers = res.headers
+            ngx.say(headers["Foo-Bar"])
+            ngx.say(headers["Foo-Baz"])
+            ngx.say(headers["ETag"])
+            ngx.say(headers["X-Foo-Bar"])
         ';
     }
 --- request
@@ -52,7 +54,6 @@ Foo-Bar
 Foo-Baz
 ETag
 X-Foo-Bar
+
 --- no_error_log
 [error]
-
-
