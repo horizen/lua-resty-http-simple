@@ -26,19 +26,22 @@ __DATA__
     resolver $TEST_NGINX_RESOLVER;
     location /foo {
         content_by_lua '
-	    ngx.header.content_length = 7
+    	    ngx.header.content_length = 7
             ngx.say("foobar")
         ';
     }
 
     location /t {
         content_by_lua '
-	    local http = require "resty.http.simple"
-	    local res, err = http.request("127.0.0.1", 1984, { path = "/foo" })
-	    ngx.say(err)
-	    ngx.say(res.body)  
+    	    local http = require "resty.http.simple"
+            local client = http:new()
+            local ok, err = client:connect("127.0.0.1", 1984)
+    	    local res, err = client:request({ path = "/foo"})
+ 
+    	    ngx.say(err)
+	        ngx.say(res.body)  
             ngx.say(res.status)
-	    ngx.say(res.headers["Content-Length"])       
+    	    ngx.say(res.headers["Content-Length"])       
         ';
     }
 --- request
@@ -65,12 +68,15 @@ foobar
 
     location /t {
         content_by_lua '
-	    local http = require "resty.http.simple"
-	    local res, err = http.request("127.0.0.1", 1984, { path = "/foo" })
-	    ngx.say(err)
-	    ngx.say(res.body)  
+	        local http = require "resty.http.simple"
+            local client = http:new()
+            local ok, err = client:connect("127.0.0.1", 1984)
+	        local res, err = client:request({ path = "/foo" })
+	        ngx.say(err)
+    	    ngx.say(res.body)  
             ngx.say(res.status)
-	    ngx.say(res.headers["Content-Length"])         
+	        ngx.say(res.headers["Content-Length"])         
+            ngx.say(res.headers["Transfer-Encoding"])
         ';
     }
 --- request
@@ -81,6 +87,7 @@ foobar
 
 200
 nil
+chunked
 --- no_error_log
 [error]
 
@@ -99,11 +106,13 @@ nil
 
     location /t {
         content_by_lua '
-	    local http = require "resty.http.simple"
-	    local res, err = http.request("127.0.0.1", 1984, { path = "/foo", version = 0 })
-	    ngx.say(res.body)  
+	        local http = require "resty.http.simple"
+            local client = http:new()
+            local ok, err = client:connect("127.0.0.1", 1984)
+	        local res, err = client:request({ path = "/foo", version = 0 })
+    	    ngx.say(res.body)  
             ngx.say(res.status)
-	    ngx.say(string.len(res.body))         
+	        ngx.say(string.len(res.body))         
         ';
     }
 --- request
