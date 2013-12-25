@@ -374,13 +374,7 @@ function _M.receive(self)
 		end
     end
     
-    if keepalive then
-		sock:setkeepalive();
-    else
-		sock:close();
-    end
-    
-    return { status = status, headers = headers, body = body }
+    return { status = status, headers = headers, body = body, keepalive = keepalive }
 end
 
 function _M.request(self, opts)
