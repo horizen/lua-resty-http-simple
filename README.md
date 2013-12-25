@@ -208,6 +208,7 @@ request
 `syntax: res, err = client:request(opts)`
 
 The opts arg is the same of the arg of client:send_req(opts)
+
 This method is combined client:send_req and client:receive
 
 
