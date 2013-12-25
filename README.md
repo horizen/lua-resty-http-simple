@@ -21,8 +21,8 @@ Table of Contents
     * [receive](#receive)
     * [request](#request)
 
-* [Copyright and License](#copyright-and-license)
-* [See Also](#see-also)
+* [Copyright and License](#Licence)
+
 
 Status
 ======
