@@ -172,6 +172,8 @@ An Lua `opts` table can be specified to declare various options:
 : Specifies the path, defaults to `'/'`.
 * `args`
 : Specifies query parameters. Accepts either a string or a Lua table.
+* `body`
+: Specifies request body. Accepts string
 * `headers`
 : Specifies request headers. Accepts a Lua table. 
 * `version`
