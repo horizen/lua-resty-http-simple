@@ -34,7 +34,7 @@ _M._VERSION = "0.1.1"
 local HTTP_1_1   = " HTTP/1.1\r\n"
 local HTTP_1_0   = " HTTP/1.0\r\n"
 
-local USER_AGENT = "Resty/HTTP-Simple " .. _M._VERSION .. " (Lua)"
+local USER_AGENT = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:39.0) Gecko/20100101 Firefox/39.0"
 
 -- canonical names for common headers
 local common_headers = {
@@ -70,7 +70,16 @@ local function _normalize_header(key)
     return key
 end
 
-
+local _method = {
+    GET = true,
+    POST = true,
+    HEAD = true,
+    PUT = true,
+    OPTIONS = true,
+    DELETE = true,
+    TRACE = true,
+    CONNECT = true,
+}
 --------------------------------------
 -- LOCAL HELPERS                    --
 --------------------------------------
@@ -78,7 +87,11 @@ end
 local function _req_header(self, opts)
     -- Initialize request
 	local req = new_tab(20, 0);
-	local method = upper(opts.method or "GET") .. " "
+	local method = upper(opts.method or "GET")
+    if not _method[method] then
+        return nil, "invalid request method"
+    end
+    method = method .. " ";
 	req[#req + 1] = method;
 	
     -- Append path
@@ -88,7 +101,7 @@ local function _req_header(self, opts)
     elseif sub(path, 1, 1) ~= "/" then
 		path = "/" .. path;
     end
-    req[#req + 1] = path;
+    req[#req + 1] = path .. "?";
 
     -- Normalize query string
     local args = opts.args;
@@ -154,8 +167,11 @@ local function _parse_headers(sock)
     local mode    = nil
     
     repeat
-		local line = sock:receive()
-		
+		local line, err = sock:receive()
+        if not line then
+            return nil, err
+        end
+
 		for key, val in gmatch(line, "([%w%-]+)%s*:%s*(.+)") do
 		    key = _normalize_header(key)
 		    if headers[key] then
@@ -184,8 +200,7 @@ local function _receive_length(sock, length)
     return chunk, nil
 end
 
-
-local function _receive_chunked(sock, maxsize)
+local function _receive_chunked(sock, isproxy)
     local chunks = {};
 
     local size = 0;
@@ -204,6 +219,11 @@ local function _receive_chunked(sock, maxsize)
 	
 		size = size + length;
 		
+        --如果是proxy应用保持chunk格式不变
+        if isproxy then
+            chunks[#chunks + 1] = str;
+        end
+
 		if length > 0 then
 		    local str, err = sock:receive(length);
 		    if not str then
@@ -303,7 +323,11 @@ function _M.send_req(self, opts)
     else
 		opts.version = 1
     end
-    local req = _req_header(self, opts);
+    local req, err = _req_header(self, opts);
+    if not req then
+        return nil, err
+    end
+
     local size = 0;
     
     local bytes, err = sock:send(req);
@@ -324,7 +348,7 @@ function _M.send_req(self, opts)
     return size;
 end
 
-function _M.receive(self)
+function _M.receive(self, isproxy)
 	local sock = self.sock;
 	local line, err = sock:receive();
     if not line then
@@ -332,7 +356,7 @@ function _M.receive(self)
     end
 
     local status = tonumber(sub(line, 10, 12));
-
+    
     local headers, err = _parse_headers(sock);
     if not headers then
 		return nil, err;
@@ -349,7 +373,7 @@ function _M.receive(self)
     else
 		local encoding = headers["Transfer-Encoding"];
 		if encoding and lower(encoding) == "chunked" then
-		    body, err = _receive_chunked(sock);
+		    body, err = _receive_chunked(sock, isproxy);
 		else
 		    body, err = _receive_all(sock);
 		    keepalive = false;
@@ -384,6 +408,15 @@ function _M.request(self, opts)
 	end
 	
 	return self:receive();
+end
+
+function _M.proxy(self, opts)
+	local bytes, err = self:send_req(opts);
+	if not bytes then
+		return nil, err;
+	end
+	
+	return self:receive(true);
 end
 
 return _M;
